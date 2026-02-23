@@ -134,7 +134,7 @@ export const enum CaptureBackend {
 ### Requirements
 
 - Install the latest [Rust](https://rustup.rs/)
-- Install Node.js >= 10
+- Install Node.js >= 22.15.0
 - Install pnpm (recommended via Corepack)
 
 ### Build & Test

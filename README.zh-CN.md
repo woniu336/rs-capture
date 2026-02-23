@@ -134,7 +134,7 @@ export const enum CaptureBackend {
 ### 环境要求
 
 - 安装最新的 [Rust](https://rustup.rs/)
-- 安装 Node.js >= 10
+- 安装 Node.js >= 22.15.0
 - 安装 pnpm（推荐通过 Corepack）
 
 ### 构建与测试
