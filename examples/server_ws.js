@@ -158,7 +158,18 @@ function mapKey(key) {
 
 async function handleInputEvent(event) {
   try {
-    const { type, x, y, button, key, modifiers } = event
+    let { type, x, y, button, key, modifiers } = event
+
+    if (
+      (type === 'mousemove' || type === 'mousedown' || type === 'mouseup' || type === 'click' || type === 'dblclick') &&
+      currentOutputWidth > 0 &&
+      currentOutputHeight > 0
+    ) {
+      const scaleX = currentScreenWidth / currentOutputWidth
+      const scaleY = currentScreenHeight / currentOutputHeight
+      x = Math.round(x * scaleX)
+      y = Math.round(y * scaleY)
+    }
 
     switch (type) {
       case 'mousemove':
@@ -238,6 +249,11 @@ let encoder = null
 let encoderW = 0
 let encoderH = 0
 let encoderBackpressure = false
+
+let currentScreenWidth = 0
+let currentScreenHeight = 0
+let currentOutputWidth = 0
+let currentOutputHeight = 0
 
 // setInterval(() => {
 //   const now = Date.now()
@@ -384,6 +400,18 @@ function startSharedCapture() {
   capture = new ScreenCapture(
     async (frame) => {
       if (clients.size === 0) return
+
+      currentScreenWidth = frame.width
+      currentScreenHeight = frame.height
+
+      let targetW = frame.width
+      let targetH = frame.height
+      if (MAX_WIDTH > 0 && frame.width > MAX_WIDTH) {
+        targetW = MAX_WIDTH
+        targetH = Math.round((frame.height * MAX_WIDTH) / frame.width)
+      }
+      currentOutputWidth = targetW
+      currentOutputHeight = targetH
 
       if (CAP_ENCODER === 'ffmpeg') {
         if (!encoder || encoderW !== frame.width || encoderH !== frame.height) {
