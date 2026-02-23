@@ -203,8 +203,20 @@ async function handleInputEvent(event) {
         break
       }
       case 'scroll':
-        // nut.js scroll support if needed
-        // await mouse.scrollDown(amount)
+        if (event.deltaY) {
+          if (event.deltaY > 0) {
+            await mouse.scrollDown(event.deltaY)
+          } else {
+            await mouse.scrollUp(Math.abs(event.deltaY))
+          }
+        }
+        if (event.deltaX) {
+          if (event.deltaX > 0) {
+            await mouse.scrollRight(event.deltaX)
+          } else {
+            await mouse.scrollLeft(Math.abs(event.deltaX))
+          }
+        }
         break
     }
   } catch (err) {

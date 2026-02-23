@@ -138,6 +138,20 @@
           })
         })
 
+        // Scroll
+        canvasEl.addEventListener(
+          'wheel',
+          (e) => {
+            e.preventDefault()
+            sendEvent({
+              type: 'scroll',
+              deltaX: e.deltaX,
+              deltaY: e.deltaY,
+            })
+          },
+          { passive: false },
+        )
+
         // Prevent context menu on right click
         canvasEl.addEventListener('contextmenu', (e) => e.preventDefault())
 

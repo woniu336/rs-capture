@@ -46,7 +46,8 @@
         justify-content: center;
         align-items: center;
       }
-      video, canvas {
+      video,
+      canvas {
         max-width: 100%;
         max-height: 100vh;
         object-fit: contain;
@@ -85,12 +86,13 @@
        */
       function mungeSdp(sdp, bitrate) {
         let lines = sdp.split('\r\n')
-        const mVideoIndex = lines.findIndex(line => line.startsWith('m=video'))
+        const mVideoIndex = lines.findIndex((line) => line.startsWith('m=video'))
         if (mVideoIndex !== -1) {
           lines.splice(mVideoIndex + 1, 0, `b=AS:${bitrate}`)
           for (let i = 0; i < lines.length; i++) {
             if (lines[i].startsWith('a=fmtp')) {
-              lines[i] += `;x-google-min-bitrate=${bitrate};x-google-max-bitrate=${bitrate};x-google-start-bitrate=${bitrate}`
+              lines[i] +=
+                `;x-google-min-bitrate=${bitrate};x-google-max-bitrate=${bitrate};x-google-start-bitrate=${bitrate}`
             }
           }
         }
@@ -106,8 +108,8 @@
           track.contentHint = 'detail'
         }
 
-        const canUseWorker = 'MediaStreamTrackProcessor' in window &&
-                           typeof canvas.transferControlToOffscreen === 'function'
+        const canUseWorker =
+          'MediaStreamTrackProcessor' in window && typeof canvas.transferControlToOffscreen === 'function'
 
         if (canUseWorker) {
           console.log('Using Worker + OffscreenCanvas for rendering')
@@ -227,6 +229,87 @@
         } catch (e) {
           console.error('Error adding ice candidate:', e)
         }
+      })
+
+      // Input handling
+      function mapKey(key) {
+        const map = {
+          ArrowUp: 'up',
+          ArrowDown: 'down',
+          ArrowLeft: 'left',
+          ArrowRight: 'right',
+          Enter: 'enter',
+          Backspace: 'backspace',
+          Escape: 'escape',
+          Tab: 'tab',
+          Control: 'control',
+          Shift: 'shift',
+          Alt: 'alt',
+          Meta: 'command',
+        }
+        if (map[key]) return map[key]
+        if (key.length === 1) return key.toLowerCase()
+        return null
+      }
+
+      function sendEvent(event, target) {
+        if (socket.connected) {
+          if (event.x !== undefined && event.y !== undefined && target) {
+            const rect = target.getBoundingClientRect()
+            let intrinsicWidth = target.tagName === 'VIDEO' ? target.videoWidth : target.width
+            let intrinsicHeight = target.tagName === 'VIDEO' ? target.videoHeight : target.height
+
+            // Fallback if dimensions are missing
+            if (!intrinsicWidth) intrinsicWidth = rect.width
+            if (!intrinsicHeight) intrinsicHeight = rect.height
+
+            const scaleX = intrinsicWidth / rect.width
+            const scaleY = intrinsicHeight / rect.height
+            event.x = Math.round((event.x - rect.left) * scaleX)
+            event.y = Math.round((event.y - rect.top) * scaleY)
+          }
+          socket.emit('input', event)
+        }
+      }
+
+      function setupInputListeners(element) {
+        element.addEventListener('mousemove', (e) => {
+          sendEvent({ type: 'mousemove', x: e.clientX, y: e.clientY }, element)
+        })
+        element.addEventListener('mousedown', (e) => {
+          sendEvent(
+            { type: 'mousedown', button: e.button === 0 ? 'left' : e.button === 2 ? 'right' : 'middle' },
+            element,
+          )
+        })
+        element.addEventListener('mouseup', (e) => {
+          sendEvent({ type: 'mouseup', button: e.button === 0 ? 'left' : e.button === 2 ? 'right' : 'middle' }, element)
+        })
+        element.addEventListener('dblclick', (e) => {
+          sendEvent({ type: 'dblclick', button: 'left' }, element)
+        })
+        element.addEventListener('contextmenu', (e) => e.preventDefault())
+        element.addEventListener(
+          'wheel',
+          (e) => {
+            e.preventDefault()
+            sendEvent({ type: 'scroll', deltaX: e.deltaX, deltaY: e.deltaY }, element)
+          },
+          { passive: false },
+        )
+      }
+
+      setupInputListeners(canvas)
+      setupInputListeners(video)
+
+      window.addEventListener('keydown', (e) => {
+        const key = mapKey(e.key)
+        if (key) sendEvent({ type: 'keydown', key })
+      })
+
+      window.addEventListener('keyup', (e) => {
+        const key = mapKey(e.key)
+        if (key) sendEvent({ type: 'keyup', key })
       })
     </script>
   </body>
