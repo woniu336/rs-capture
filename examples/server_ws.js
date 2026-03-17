@@ -4,7 +4,7 @@ const http = require('http')
 const path = require('path')
 const os = require('os')
 const { spawn } = require('child_process')
-const { mouse, keyboard, Button, Key, Point } = require('@nut-tree/nut-js')
+const { mouse, keyboard, Button, Key, Point } = require('@nut-tree-fork/nut-js')
 const { ScreenCapture } = require('@vertfrag/rs-capture')
 
 const app = express()
